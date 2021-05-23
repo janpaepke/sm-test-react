@@ -1,40 +1,64 @@
-import { useEffect, useRef } from 'react';
-import { ScrollMagic } from 'scrollmagic';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import ScrollMagic, { ScrollMagicEvent, ScrollMagicOptions } from 'scrollmagic';
+// import {ScrollMagicTween} from 'scrollmagic-tween'
 
-type Options = { element?: HTMLElement | SVGElement | null };
-type Callbacks = {
-	onProgress?: (e: { target: ScrollMagic }) => void;
-	onEnter?: (e: { target: ScrollMagic }) => void;
-	onLeave?: (e: { target: ScrollMagic }) => void;
-};
-export const useScrollMagic = ({ element }: Options, { onProgress, onEnter, onLeave }: Callbacks = {}) => {
-	const ref = useRef<any>(null);
+// const MySM = ScrollMagic.extend([ScrollMagicTween]);
+
+// element is set via ref
+// todo: scrollParent not supported yet. Maybe also via ref? or maybe using contexts?
+export type ScrollMagicHookOptions = Pick<
+	ScrollMagicOptions,
+	'elementStart' | 'elementEnd' | 'triggerStart' | 'triggerEnd' | 'vertical'
+>;
+
+export interface ScrollMagicHookCallbacks {
+	onProgress?: (e: ScrollMagicEvent) => void;
+	onEnter?: (e: ScrollMagicEvent) => void;
+	onLeave?: (e: ScrollMagicEvent) => void;
+}
+
+const stripUndefined = (obj: { [key: string]: any }) =>
+	Object.fromEntries(Object.entries(obj).filter(([, v]) => v !== undefined));
+
+export const useScrollMagic = (
+	{ elementStart, elementEnd, triggerStart, triggerEnd, vertical }: ScrollMagicHookOptions = {},
+	{ onProgress, onEnter, onLeave }: ScrollMagicHookCallbacks = {}
+): [elementRef: React.RefCallback<HTMLElement>, progress: number] => {
+	const sm = useRef<ScrollMagic | null>(null);
+	const smOptions = useRef<ScrollMagicOptions>({}); // set in useEffect below
+	const callbacks = useRef<ScrollMagicHookCallbacks>({}); // set below
+	callbacks.current = { onProgress, onEnter, onLeave };
+	const [progress, setProgress] = useState(0);
+
+	const setOptions = useCallback((changes: ScrollMagicOptions) => {
+		smOptions.current = { ...smOptions.current, ...changes };
+		sm.current?.modify(smOptions.current);
+	}, []);
+
+	// set hook options initally (no sm instance yet, so no side effect) and then update, when they change
+	useEffect(
+		() => setOptions(stripUndefined({ elementStart, elementEnd, triggerStart, triggerEnd, vertical })),
+		[elementStart, elementEnd, triggerStart, triggerEnd, vertical, setOptions]
+	);
+
+	// create / destroy sm on mount / unmount
 	useEffect(() => {
-		if (ref.current === null) {
-			return;
-		}
-		const sm = new ScrollMagic({ element: ref.current });
-		if (undefined !== onProgress) {
-			sm.on('progress', onProgress);
-		}
-		if (undefined !== onEnter) {
-			sm.on('enter', onEnter);
-		}
-		if (undefined !== onLeave) {
-			sm.on('leave', onLeave);
-		}
-
+		const instance = new ScrollMagic(smOptions.current)
+			.on('progress', (e) => {
+				setProgress(e.target.progress);
+				callbacks.current.onProgress?.(e);
+			})
+			.on('enter', (e) => callbacks.current.onEnter?.(e))
+			.on('leave', (e) => callbacks.current.onLeave?.(e));
+		sm.current = instance;
 		return () => {
-			sm.destroy();
+			instance.destroy();
+			sm.current = null;
 		};
-	}, [onProgress, onEnter, onLeave]);
+	}, []);
 
-	// useEffect(() => {
-	// 	if (undefined === element) {
-	// 		return;
-	// 	}
-	// 	ref.current = element;
-	// }, [element]);
+	// create triggerElementRef.
+	const elementRef: React.RefCallback<HTMLElement> = useCallback((element) => setOptions({ element }), [setOptions]);
 
-	return [ref];
+	return [elementRef, progress];
 };

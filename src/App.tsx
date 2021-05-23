@@ -1,17 +1,29 @@
 import './App.css';
 
-import React from 'react';
-import { ScrollMagic } from 'scrollmagic';
+import { useState } from 'react';
 
-import { ClassToggle } from './ClassToggle';
 import ScrollMagicElement from './ScrollMagicElement';
 
-ScrollMagic.addPlugin(ClassToggle);
 function App() {
+	const [exampleProgress, setExampleProgress] = useState(0);
+	// const [active, setActive] = useState(false);
 	return (
+		// <div className="App" onClick={() => setActive(!active)}>
 		<div className="App">
 			<div style={{ height: '120vh' }}></div>
-			<ScrollMagicElement offset={0} />
+			{/* example A */}
+			<ScrollMagicElement render={({ progress }) => `A: ${progress.toFixed(3)}`} />
+			<div style={{ height: '120vh' }}></div>
+			{/* example B */}
+			<ScrollMagicElement
+				elementStart={50}
+				elementEnd={50}
+				onProgress={(e) => {
+					setExampleProgress(e.target.progress);
+				}}
+			>
+				B: {exampleProgress.toFixed(3)}
+			</ScrollMagicElement>
 			<div style={{ height: '120vh' }}></div>
 		</div>
 	);
