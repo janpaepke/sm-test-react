@@ -3,12 +3,15 @@ import './App.css';
 import { useState } from 'react';
 
 import ScrollMagicElement from './ScrollMagicElement';
+import { useScrollMagic } from './useScrollMagic';
 
 function App() {
-	const [exampleProgress, setExampleProgress] = useState(0);
-	// const [active, setActive] = useState(false);
+	// Example A: SM Element with render function
+	// Example B: SM Element with children and manual state management
+	const [exampleBProgress, setExampleBProgress] = useState(0);
+	// Example C: SM hook
+	const [exampleCRef, exampleCProgress] = useScrollMagic();
 	return (
-		// <div className="App" onClick={() => setActive(!active)}>
 		<div className="App">
 			<div style={{ height: '120vh' }}></div>
 			{/* example A */}
@@ -19,11 +22,14 @@ function App() {
 				elementStart={50}
 				elementEnd={50}
 				onProgress={(e) => {
-					setExampleProgress(e.target.progress);
+					setExampleBProgress(e.target.progress);
 				}}
 			>
-				B: {exampleProgress.toFixed(3)}
+				B: {exampleBProgress.toFixed(3)}
 			</ScrollMagicElement>
+			<div style={{ height: '120vh' }}></div>
+			{/* example C */}
+			<div ref={exampleCRef}>C: {exampleCProgress.toFixed(3)}</div>
 			<div style={{ height: '120vh' }}></div>
 		</div>
 	);
