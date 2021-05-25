@@ -15,6 +15,11 @@ declare type ContainerBounds = {
     trackSize: number;
     scrollSize: number;
 };
+export interface ScrollMagicPlugin {
+    onAdd?(this: ScrollMagic): void;
+    onRemove?(this: ScrollMagic): void;
+    onModify?(this: ScrollMagic, changesPublic: Options.Public): void;
+}
 export declare class ScrollMagic {
     readonly name = "ScrollMagic";
     private readonly dispatcher;
@@ -23,6 +28,7 @@ export declare class ScrollMagic {
     private readonly viewportObserver;
     private readonly executionQueue;
     private readonly update;
+    private readonly plugins;
     protected optionsPublic: Required<Options.Public>;
     protected optionsPrivate: Options.Private;
     protected elementBoundsCache: ElementBounds;
@@ -42,12 +48,14 @@ export declare class ScrollMagic {
     protected updateContainerBoundsCache(): void;
     protected updateProgress(): void;
     protected updateViewportObserver(): void;
-    protected onOptionChanges(changes: Array<keyof Options.Public>): void;
+    protected onOptionChanges(changedOptions: Options.Public): void;
     protected onElementResize(): void;
     protected onContainerUpdate(e: ContainerEvent): void;
     protected onIntersectionChange(intersecting: boolean, target: Element): void;
     protected triggerEvent(type: EventType, forward: boolean): void;
     modify(options: Options.Public): ScrollMagic;
+    addPlugin(plugin: ScrollMagicPlugin): ScrollMagic;
+    removePlugin(plugin: ScrollMagicPlugin): ScrollMagic;
     set element(element: Required<Options.Public>['element']);
     get element(): Required<Options.Public>['element'];
     set scrollParent(scrollParent: Required<Options.Public>['scrollParent']);
@@ -68,6 +76,7 @@ export declare class ScrollMagic {
         end: number;
     };
     get computedOptions(): Options.PrivateComputed;
+    get pluginList(): Array<ScrollMagicPlugin>;
     on(type: `${EventType}`, cb: (e: ScrollMagicEvent) => void): ScrollMagic;
     off(type: `${EventType}`, cb: (e: ScrollMagicEvent) => void): ScrollMagic;
     subscribe(type: `${EventType}`, cb: (e: ScrollMagicEvent) => void): () => void;

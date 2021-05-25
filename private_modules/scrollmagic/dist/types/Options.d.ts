@@ -27,7 +27,7 @@ export declare type Public = {
     elementEnd?: number | UnitString | CenterShorthand | PixelConverter;
 };
 export declare type Private = SameProperties<Public, {
-    element: HTMLElement | SVGElement;
+    element: Element;
     scrollParent: Window | HTMLElement;
     vertical: boolean;
     triggerStart: PixelConverter;
